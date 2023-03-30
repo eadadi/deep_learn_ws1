@@ -2,3 +2,6 @@ cscope*
 tags
 __pycache__
 cifar*
+results
+*.swp
+torch_cifar10*

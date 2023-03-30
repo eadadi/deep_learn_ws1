@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 class DataHandler:
     DS_FOLDER = "cifar-10-batches-py"
@@ -29,10 +30,14 @@ class DataHandler:
         data_batches_array.append(DataHandler.unpickle(f"{DataHandler.DS_FOLDER}/test_batch"))
         return data_batches_array
 
-    def sample_n_from_data_batch(batch, n):
+    def sample_and_normalize_n_from_data_batch(batch, n):
         l = len(batch[b'data'][0])
         idxes = np.random.randint(l, size=n)
         X = batch[b'data'][idxes,:]
+        #Normalize X to (0,1) range
+        scaler = MinMaxScaler()
+        scaler.fit(X)
+        X = scaler.transform(X)
         Y = np.array(batch[b'labels'])
         Y = Y[idxes,]
         return (X,Y)
@@ -43,12 +48,12 @@ class DataHandler:
         while N>=2:
             rn = np.random.randint(n)
             n -= rn
-            to_add = DataHandler.sample_n_from_data_batch(batches[N-1], rn)
+            to_add = DataHandler.sample_and_normalize_n_from_data_batch(batches[N-1], rn)
             if to_add:
                 res.append(to_add)
             N -= 1
         if n > 0:
-            res.append(DataHandler.sample_n_from_data_batch(batches[0], n))
+            res.append(DataHandler.sample_and_normalize_n_from_data_batch(batches[0], n))
         X, Y = res[0][0], res[0][1]
         if len(res) == 0:
             return (X,Y)
