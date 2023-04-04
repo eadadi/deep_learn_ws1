@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
-from part2_baseline import epochs
-from part2_optimization import momentum,lr,std
+from part3_baseline import epochs
+from part3_optimization import momentum,lr,std
 import time
-FOLDER="./results/part2/"
+FOLDER="./results/part3/"
 
 x_axis = [i+1 for i in range(epochs)]
 
@@ -50,14 +50,14 @@ total_time = 0
 "       optimization
 """
 t = title("SGD_Adam")
-from part2_baseline import params, train_and_test_for_params
+from part3_baseline import params, train_and_test_for_params
 t0=time.time()
 res = train_and_test_for_params(params)
 t1=time.time()-t0
 total_time+=t1
 p_time(t1)
 
-from part2_optimization import activate_optimization
+from part3_optimization import activate_optimization
 t0=time.time()
 result_optimization = activate_optimization()
 t1=time.time()-t0
@@ -77,7 +77,7 @@ breaksection()
 """
 "PART B: Xavier Initialization
 """
-from part2_xavier import activate_xavier
+from part3_xavier import activate_xavier
 t=title("Xavier_Init")
 t0=time.time()
 result_xavier = activate_xavier()
@@ -94,7 +94,7 @@ breaksection()
 """
 "PART C: Weight decay Initialization
 """
-from part2_regularization_decay import activate_decay
+from part3_regularization_decay import activate_decay
 t=title("Regularization_decay")
 t0=time.time()
 results = activate_decay()
@@ -109,7 +109,7 @@ plot_2_graphs(results, labels, ylabels,title=t)
 print()
 
 t=title("Regularization_dropout")
-from part2_regularization_dropout import activate_dropout
+from part3_regularization_dropout import activate_dropout
 t0=time.time()
 results = activate_dropout()
 t1=time.time()-t0
@@ -126,7 +126,7 @@ breaksection()
 "PART D: PCA Whitening 
 """
 t=title("PCA_Whitening")
-from part2_whitening import activate_whitening
+from part3_whitening import activate_whitening
 t0=time.time()
 results = activate_whitening()
 t1=time.time()-t0
@@ -142,7 +142,7 @@ breaksection()
 """
 "PART E: Varying network widths
 """
-from part2_width import activate_width
+from part3_width import activate_width
 t=title("Varying_widths")
 t0=time.time()
 w64, w1024, w4096 = activate_width()
@@ -154,7 +154,7 @@ results = [
         [w64[0],w64[2],w1024[0],w1024[2],w4096[0],w4096[2]],
         [w64[1],w64[3],w1024[1],w1024[3],w4096[1],w4096[3]],
         ]
-labels = ["w64 Train Err","w64 Test Err", "w1024 Train Err", "w1024 Test Err", "w4096 Train Err", "w4096 Test Err", "w64 Train Acc","w64 Test Acc", "w1024 Train Acc", "w1024 Test Acc", "w4096 Train Acc", "w4096 Test Acc"]
+labels = ["(64,16) Train Err","(64,16) Test Err", "(256,64) Train Err", "(256, 64) Test Err", "(512,256) Train Err", "(512,256) Test Err", "(64,16) Train Acc","(64,16) Test Acc", "(256,64) Train Acc", "(256,64) Test Acc", "(512,256) Train Acc", "(512,256) Test Acc"]
 
 plot_2_graphs(results, labels, ylabels,title=t)
 breaksection()
@@ -163,20 +163,20 @@ breaksection()
 "PART F: Varying network depths
 """
 t=title("Varying_depths")
-from part2_depth import activate3, activate4, activate10
+from part3_depth import activate3, activate4, activate5
 t0=time.time()
 d3 = activate3()
 d4 = activate4()
-d10 = activate10()
+d5 = activate5()
 t1=time.time()-t0
 total_time+=t1
 p_time(t1)
 
 results = [
-        [d3[0],d3[2],d4[0],d4[2],d10[0],d10[2]],
-        [d3[1],d3[3],d4[1],d4[3],d10[1],d10[3]],
+        [d3[0],d3[2],d4[0],d4[2],d5[0],d5[2]],
+        [d3[1],d3[3],d4[1],d4[3],d5[1],d5[3]],
         ]
-labels = ["d3 Train Err","d3 Test Err", "d4 Train Err", "d4 Test Err", "d10 Train Err", "d10 Test Err", "d3 Train Acc","d3 Test Acc", "d4 Train Acc", "d4 Test Acc", "d10 Train Acc", "d10 Test Acc"]
+labels = ["d3 Train Err","d3 Test Err", "d4 Train Err", "d4 Test Err", "d5 Train Err", "d5 Test Err", "d3 Train Acc","d3 Test Acc", "d4 Train Acc", "d4 Test Acc", "d5 Train Acc", "d5 Test Acc"]
 
 plot_2_graphs(results, labels, ylabels,title=t)
 breaksection()

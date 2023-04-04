@@ -5,3 +5,4 @@ cifar*
 results
 *.swp
 torch_cifar10*
+*lyx*

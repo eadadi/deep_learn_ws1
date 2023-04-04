@@ -4,24 +4,64 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
 
-class NeuralNetwork(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, std):
-        super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, output_size)
+class CNNetwork(nn.Module):
+    def __init__(self,std,iinit=init.normal_,iinit_flag=True, dropout_flag=False, width_conv1=64, width_conv2=16):
+        super(CNNetwork, self).__init__()
+
+        # Define the convolutional layers
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=width_conv1, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=width_conv1, out_channels=width_conv2, kernel_size=3, stride=1, padding=1)
+
+        # Define the pooling layers
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        
+        # Define the fully connected layers
+        self.fc1 = nn.Linear(in_features=width_conv2 * 8 * 8, out_features=784)
+        self.fc2 = nn.Linear(in_features=784, out_features=10)
+
+        # Define the activation function
         self.relu = nn.ReLU()
 
         # Initialize the weights with a zero-mean Gaussian distribution
-        init.normal_(self.fc1.weight, mean=0.0, std=std)
-        init.normal_(self.fc2.weight, mean=0.0, std=std)
+        if iinit_flag:
+            iinit(self.fc1.weight, mean=0.0, std=std)
+            iinit(self.fc2.weight, mean=0.0, std=std)
+            iinit(self.conv1.weight, mean=0.0, std=std)
+            iinit(self.conv2.weight, mean=0.0, std=std)
+        else:
+            iinit(self.fc1.weight)
+            iinit(self.fc2.weight)
+            iinit(self.conv1.weight)
+            iinit(self.conv2.weight)
+
+        self.dropout_flag=dropout_flag
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = self.relu(x)
+        # Pass the input through the convolutional layers and activation function
+        dropout = nn.Dropout()
+        x = self.relu(self.conv1(x))
+        if self.dropout_flag:
+            x = dropout(x)
+        x = self.pool1(x)
+        x = self.relu(self.conv2(x))
+        if self.dropout_flag:
+            x = dropout(x)
+        x = self.pool2(x)
+
+        # Flatten the output of the convolutional layers
+        x = x.view(-1, 16 * 8 * 8)
+
+        # Pass the flattened output through the fully connected layers and activation function
+        x = self.relu(self.fc1(x))
+        if self.dropout_flag:
+            x = dropout(x)
         x = self.fc2(x)
+
+        # Return the output
         return x
 
-def Train(dataloader, model, loss_fn, input_size, optimizer):
+def Train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     model.train()
     num_batches = len(dataloader)
@@ -29,7 +69,7 @@ def Train(dataloader, model, loss_fn, input_size, optimizer):
 
     for batch, (X,y) in enumerate(dataloader):
         #Normalize X:
-        X = X.reshape(len(X), input_size)
+        #X = X.reshape(len(X), )
         X = (X-X.min())/(X.max()-X.min())
         X,y = X.to(device), y.to(device)
 
@@ -56,7 +96,7 @@ def Test(dataloader, model, loss_fn, log=False):
     with torch.no_grad():
         for X, y in dataloader:
             #Normalize X:
-            X = X.reshape(len(X), input_size) 
+            #X = X.reshape(len(X), ) 
             X = (X-X.min())/(X.max()-X.min())
             X, y = X.to(device), y.to(device)
 
@@ -71,10 +111,7 @@ def Test(dataloader, model, loss_fn, log=False):
     return test_loss, correct
 
 
-epochs = 60
-input_size = 32 * 32 * 3
-hidden_size = 256
-output_size = len(classes)
+epochs = 50
 loss_fn = nn.CrossEntropyLoss()
 batch_size = 64
 params = {
@@ -94,7 +131,7 @@ def get_grid_search_triplets(params):
                 result.append((v1,v2,v3))
     return result
 
-def train_and_test_for_params(params):
+def train_and_test_for_params(params, const_log=False):
     flag = False
     trainloader, testloader = get_trainloader_and_testloader(batch_size = batch_size)
     grid_search_params = get_grid_search_triplets(params)
@@ -107,17 +144,15 @@ def train_and_test_for_params(params):
         """
         Set the model by this std parameter
         """
-        model = NeuralNetwork(input_size, hidden_size, output_size, std)
-        optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=acc)
+        model = CNNetwork(std)
         for t in range(epochs):
-            if t+1==epochs:
+            if t+1==epochs or const_log:
                 print(f"[E{t+1}]", end=" ")
                 flag = True
             e_trainloss, e_traincorrect = Train(trainloader,
                     model,
                     loss_fn,
-                    input_size,
-                    optimizer)
+                    optimizer=torch.optim.SGD(model.parameters(), lr=lr, momentum=acc))
             e_testloss, e_testcorrect = Test(testloader,
                     model,
                     loss_fn,

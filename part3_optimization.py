@@ -2,20 +2,21 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
-from part2_baseline import NeuralNetwork, Train, Test, epochs, input_size, hidden_size, output_size, loss_fn, batch_size, get_trainloader_and_testloader,device
+from part3_baseline import CNNetwork, Train, Test, epochs, loss_fn, batch_size, get_trainloader_and_testloader,device
 
 def train_and_test(model,
         loss_fn,
         optimizer,
         epochs,
-        batch_size):
+        batch_size,
+        const_log = False):
     flag = False
     trainloader, testloader = get_trainloader_and_testloader(batch_size = batch_size)
     res_trainloss, res_traincorrect = list(), list()
     res_testloss, res_testcorrect = list(), list()
 
     for t in range(epochs):
-        if t+1==epochs:
+        if t+1==epochs or const_log:
             print(f"[E{t+1}]", end=" ")
             flag = True 
 
@@ -23,7 +24,6 @@ def train_and_test(model,
                 trainloader,
                 model,
                 loss_fn,
-                input_size,
                 optimizer)
         e_testloss, e_testcorrect = Test(
                 testloader,
@@ -42,13 +42,15 @@ def train_and_test(model,
 
 #Use best params obtained in the previous question
 momentum = .9
-lr = .01
+lr = .001
 std = .1
 def activate_optimization():
-    model = NeuralNetwork(input_size, hidden_size, output_size, std)
+    model = CNNetwork(std)
     return train_and_test(
             model=model,
             loss_fn=nn.CrossEntropyLoss(),
             optimizer=torch.optim.Adam(model.parameters(),lr),
             epochs=epochs,
             batch_size=batch_size)
+
+#activate_optimization()
